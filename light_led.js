@@ -6,8 +6,18 @@ var serviceUUIDs = ["03b80e5a-ede8-4b33-a751-6ce34ec4c700"]; // default: [] => a
 const timeout = ms => new Promise(res => setTimeout(res, ms))
 const noble = require('@abandonware/noble');
 
-const LED_NUMBER = 5
-const LED_INTENSITY = 120
+const SAMPLE_1 = 10+0
+const SAMPLE_2 = 10+1
+const SAMPLE_3 = 10+2
+const SAMPLE_4 = 10+3
+const SAMPLE_5 = 10+4
+
+let numOfLeds = 10
+
+let midiData = [0x80, 0x80, 144+0, SAMPLE_1, 127];
+
+const LED_NUMBER = 0
+const LED_INTENSITY = Math.floor(Math.random() * 127)
 const ledData = [0x80, 0x80, 0x90, LED_NUMBER, LED_INTENSITY];
 
 noble.on('stateChange', async (state) => {
@@ -53,13 +63,20 @@ noble.on('discover', async (peripheral) => {
       console.log(characteristics);
     }
 
-    for (device of devicesAdded) {
-      await device.characteristics[0].write( device.midiData , false, (error)=>{
-        if (error){
-          console.error(error)
-        }
-      })
-      await delay(1000)
+    for (let deviceInd in devicesAdded) {
+      for (let i =0; i < numOfLeds; i++) {
+        let d = devicesAdded[deviceInd].midiData
+        d[3] = i;
+        await devicesAdded[deviceInd].characteristics[0].write( d , false, (error)=>{
+          if (error){
+            console.error(error)
+          }
+        })
+        console.log('blabl' , i);
+        await delay(22)
+      }
+      
+      // await delay(1000)
     }
 
     setTimeout(() => {

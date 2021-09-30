@@ -1,4 +1,4 @@
-# nothing much here
+# Game of Life SERVER
 
 ## protocol suggestion
 

@@ -1,14 +1,22 @@
 const WebSocketServer = require('websocket').server,
     http = require('http'),
     fileSystem = require('fs'),
-    path = require('path');
+    path = require('path'),
+    { handleMessage, handleDisconnect, eventsEmitter } = require('./manager');
+
+WebSocketServer.getUniqueID = () => {
+    function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+    }
+    return s4() + s4() + '-' + s4();
+};
 
 const server = http.createServer(function(request, response) {
     console.log((new Date()) + ' Received request for ' + request.url);
     switch (request.url) {
         case "/":
             console.log("sending index.html file...")
-            const filePath = path.join(__dirname, "index.html"),
+            const filePath = path.join(__dirname, "admin.html"),
                 stat = fileSystem.statSync(filePath);
             response.writeHead(200,
                 {
@@ -24,6 +32,7 @@ const server = http.createServer(function(request, response) {
             break;
     }
 });
+
 server.listen(8080, function() {
     console.log((new Date()) + ' Server is listening on port 8080');
 });
@@ -52,21 +61,28 @@ wsServer.on('request', function(request) {
     }
 
     const connection = request.accept('echo-protocol', request.origin);
-    
-    console.log((new Date()) + ' Connection accepted.');
+    connection.__gol_id = WebSocketServer.getUniqueID();
 
     connection.on('message', function(message) {
-        if (message.type === 'utf8') {
-            console.log('Received Message: ' + message.utf8Data);
-            connection.sendUTF(message.utf8Data);
-        }
-        else if (message.type === 'binary') {
-            console.log('Received Binary Message of ' + message.binaryData.length + ' bytes');
-            connection.sendBytes(message.binaryData);
+        try {
+            if (message.type === 'utf8') {
+                console.log('Received Message: ' + JSON.stringify(message));
+                // connection.sendUTF(message.utf8Data);
+                handleMessage(JSON.parse(message.utf8Data), connection);
+            }
+            //  else if (message.type === 'binary') {
+            //     console.log('Received Binary Message of ' + message.binaryData.length + ' bytes');
+            //     connection.sendBytes(message.binaryData);
+            // }
+        } catch (ex) {
+            console.error(ex);
         }
     });
-    
+
     connection.on('close', function(reasonCode, description) {
         console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
+        handleDisconnect(connection);
     });
 });
+
+

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Game of Life ::: ADMIN</title>
+</head>
+
+<body>
+    <h1>Game of Life ::: ADMIN</h1>
+    <input placeholder="Send message..." /><button onclick="socket.send(this.previousSibling.value)">Send</button>
+</body>
+
+<script>
+    const connect = () => {
+        const socket = new WebSocket(`ws://${location.host}`, ["echo-protocol"]);
+
+        socket.onopen = (event) => {
+            console.log("connected");
+            socket.send(JSON.stringify({
+                "eventName": "admin-enter",
+                "me": "admin",
+                "payload": null
+            }));
+        };
+
+        socket.onmessage = (event) => {
+            console.log('Message from server ', event.data);
+        };
+
+        socket.onclose = (event) => {
+            console.log("onclose, reconnecting...");
+            setTimeout(() => connect(), 100);
+        };
+    };
+
+    (() => {
+        console.log("::: WELCOME :::");
+        connect();
+    })();
+
+</script>
+
+</html>

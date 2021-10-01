@@ -55,6 +55,9 @@ All events are sent from client with these properties:
     "eventName": "update-rssi",
     "me": "my-identifier",
     "payload": {
+        "gps_lat": 1.22222,
+        "gps_lon": 2.22222,
+        "gps_precision_m": 5.6,
         "rssiList": [
             {"player": "a", "rssi": -20},
             {"player": "b", "rssi": -50},
